@@ -146,3 +146,10 @@ docker_push: docker_tag docker_auth ## push to docker hub
 	docker push "openedx/lms:${GITHUB_SHA}"
 	docker push 'openedx/studio:latest'
 	docker push "openedx/studio:${GITHUB_SHA}"
+
+docker_push_kyle:
+	docker tag openedx/lms kdmccormick96/lms
+	docker tag openedx/studio kdmccormick96/studio
+	docker push 'kdmccormick96/lms:latest'
+	docker push 'kdmccormick96/studio:latest'
+
