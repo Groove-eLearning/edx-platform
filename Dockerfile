@@ -1,13 +1,17 @@
 FROM ubuntu:focal as pre_base
 
 # Warning: This file is experimental.
+#
 # Short-term goals:
-# * Be a suitable replacement for the edxops/edxapp image in devstack (in progress).
+# * Be a suitable replacement for the `edxops/edxapp` image in devstack (in progress).
 # * Take advantage of Docker caching layers: aim to put commands in order of
 #   increasing cache-busting frequency.
 # * Related to ^, use no Ansible or Paver.
 # Long-term goals:
 # * Be a suitable base for production LMS and Studio images (THIS IS NOT YET THE CASE!).
+#
+# TODO: factor out an env-agnostic base from which a `dev` and `prod` stages
+#       can be derived (for both lms and studio).
 
 # Install system requirements.
 # We update, upgrade, and delete lists all in one layer
@@ -114,8 +118,8 @@ RUN (echo '#!/usr/bin/env bash' \
 
 # Create and populate configuration directory.
 RUN mkdir -p $CONFIG_ROOT
-COPY lms/envs/devstack.yml $LMS_CFG
-COPY cms/envs/devstack.yml $STUDIO_CFG
+COPY lms/envs/devstack-experimental.yml $LMS_CFG
+COPY cms/envs/devstack-experimental.yml $STUDIO_CFG
 
 # Set up a Python virtual environment.
 # It is already 'activated' because $VIRTUAL_ENV/bin was put on $PATH.
@@ -131,10 +135,10 @@ FROM pre_base AS base
 # (see https://openedx.atlassian.net/browse/BOM-2579).
 COPY requirements requirements
 COPY requirements requirements
-RUN  sed '/^-e \(common\/\|openedx\/\|.\)/d' requirements/edx/base.txt \
-  > requirements/edx/base-nonlocal.txt
+RUN  sed '/^-e \(common\/\|openedx\/\|.\)/d' requirements/edx/development.txt \
+  > requirements/edx/development-minus-local.txt
 RUN pip install -r requirements/pip.txt
-RUN pip install -r requirements/edx/base-nonlocal.txt
+RUN pip install -r requirements/edx/development-minus-local.txt
 
 # Set up a Node environment and install Node requirements.
 # Must be done after Python requirements, since nodeenv is installed
@@ -151,13 +155,11 @@ COPY . .
 # Install Python requirements again in order to capture local projects, which
 # were skipped earlier. This should be much quicker than if were installing
 # all requirements from scratch.
-RUN pip install -r requirements/edx/base.txt
+RUN pip install -r requirements/edx/development.txt
 
 # Update assets.
 # This set of commands was extracted from `paver update_assets`.
 # Running the commands directly is much faster than invoking Paver.
-# Additionally, by updating assets before copying in code,
-# we lower the frequency with which the asset cache layer gets busted.
 # The final asset updating steps (collectstatic and compile_sass) are
 # service-variant specific and require the Django project to be ready,
 # so we do them under the `lms` and `studio` stages.
@@ -197,7 +199,7 @@ RUN NODE_ENV=development \
 #  Define LMS target.
 FROM base as lms
 ENV SERVICE_VARIANT lms
-ENV DJANGO_SETTINGS_MODULE lms.envs.production
+ENV DJANGO_SETTINGS_MODULE lms.envs.devstack_docker
 
 # Finish updating assets, now that code is copied in and we know which
 # service variant we are.
@@ -220,7 +222,7 @@ CMD gunicorn \
 #  Define Studio target.
 FROM base as studio
 ENV SERVICE_VARIANT cms
-ENV DJANGO_SETTINGS_MODULE cms.envs.production
+ENV DJANGO_SETTINGS_MODULE cms.envs.devstack_docker
 
 # Finish updating assets, now that code is copied in and we know which
 # service variant we are.
