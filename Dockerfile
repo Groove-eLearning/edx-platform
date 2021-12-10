@@ -137,13 +137,13 @@ RUN pip install -r requirements/edx/base.txt
 # service-variant specific and require the Django project to be ready,
 # so we do them under the `lms` and `studio` stages.
 RUN xmodule_assets common/static/xmodule
-RUN mkdir -p common/static/common/js/vendor
-RUN mkdir -p common/static/common/css/vendor
-RUN find node_modules/@edx/studio-frontend/dist -type f \( -name \*.css -o -name \*.css.map \) | \
-    xargs cp --target-directory=common/static/common/css/vendor
-RUN find node_modules/@edx/studio-frontend/dist -type f \! -name \*.css \! -name \*.css.map | \
-    xargs cp --target-directory=common/static/common/js/vendor
-RUN cp -f --target-directory=common/static/common/js/vendor \
+RUN mkdir -p common/static/common/js/vendor \
+ && mkdir -p common/static/common/css/vendor \
+ && find node_modules/@edx/studio-frontend/dist -type f \( -name \*.css -o -name \*.css.map \) | \
+    xargs cp --target-directory=common/static/common/css/vendor \
+ && find node_modules/@edx/studio-frontend/dist -type f \! -name \*.css \! -name \*.css.map | \
+    xargs cp --target-directory=common/static/common/js/vendor \
+ && cp -f --target-directory=common/static/common/js/vendor \
     node_modules/backbone.paginator/lib/backbone.paginator.js \
     node_modules/backbone/backbone.js \
     node_modules/bootstrap/dist/js/bootstrap.bundle.js \
