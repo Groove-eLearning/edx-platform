@@ -64,6 +64,12 @@ jobs:
         run: |
           python -Wd -m pytest -p no:randomly --ds=${{ env.settings_path }} ${{ env.unit_test_paths }}
 
+      - name: output json file
+        if: success()
+        run: |
+          ls -la test_root/log/
+        continue-on-error: true
+
       - name: rename warnings json file
         if: success()
         run: |
@@ -79,7 +85,7 @@ jobs:
           path: |
             test_root/log/pytest_warnings*.json
 
-  collect-warnings-report:
+  compile-warnings-report:
     runs-on: [ self-hosted ]
     needs: [ run-tests ]
     steps:
@@ -101,7 +107,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v2
         with:
-          name: pytest-warning-report
+          name: pytest-warning-report-html
           path: |
             reports/pytest_warnings/warning_report_all.html
 
