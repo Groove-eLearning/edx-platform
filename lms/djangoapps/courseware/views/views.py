@@ -1133,13 +1133,12 @@ def dates(request, course_id):
 @data_sharing_consent_required
 def progress(request, course_id, student_id=None):
     """ Display the progress page. """
-    from lms.urls import COURSE_PROGRESS_NAME
-
     course_key = CourseKey.from_string(course_id)
 
     if course_home_mfe_progress_tab_is_active(course_key) and not request.user.is_staff:
+        end_of_redirect_url = 'progress' if not student_id else f'progress/{student_id}'
         raise Redirect(get_learning_mfe_home_url(
-            course_key=course_key, url_fragment=COURSE_PROGRESS_NAME, params=request.GET,
+            course_key=course_key, url_fragment=end_of_redirect_url, params=request.GET,
         ))
 
     with modulestore().bulk_operations(course_key):
