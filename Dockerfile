@@ -141,7 +141,6 @@ FROM pre_base AS base
 # later. This step can be simplified when the local projects are dissolved
 # (see https://openedx.atlassian.net/browse/BOM-2579).
 COPY requirements requirements
-COPY requirements requirements
 RUN  sed '/^-e \(common\/\|openedx\/\|.\)/d' requirements/edx/development.txt \
   > requirements/edx/development-minus-local.txt
 RUN pip install -r requirements/pip.txt
