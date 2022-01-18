@@ -426,22 +426,18 @@ def award_course_certificate(self, username, course_run_key, certificate_availab
                 user=user.id,
                 course_id=course_key
             )
-        except GeneratedCertificate.DoesNotExist:
-            LOGGER.exception(
+        except GeneratedCertificate.DoesNotExist as exc:
+            error_msg = (
                 "Task award_course_certificate was called without Certificate found "
                 f"for {course_key} to user {username}"
             )
-            error_msg ="Task award_course_certificate was called without Certificate found "
-            LOGGER.info(
-                "Retry to execute award_course_certificate task. "
-                f"Countdown is now {countdown}"
-            )
+            LOGGER.exception(error_msg)
             raise _retry_with_custom_exception(
                 username=username,
-                course_run_key=course_run_key,
+                course_key=course_key,
                 reason=error_msg,
                 countdown=countdown
-            )
+            ) from exc
 
         if certificate.mode in CourseMode.CERTIFICATE_RELEVANT_MODES:
             try:
