@@ -434,7 +434,7 @@ def award_course_certificate(self, username, course_run_key, certificate_availab
             LOGGER.exception(error_msg)
             raise _retry_with_custom_exception(
                 username=username,
-                course_key=course_key,
+                course_run_key=course_run_key,
                 reason=error_msg,
                 countdown=countdown
             ) from exc
