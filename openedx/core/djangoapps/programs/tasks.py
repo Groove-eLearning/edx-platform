@@ -426,12 +426,19 @@ def award_course_certificate(self, username, course_run_key, certificate_availab
                 user=user.id,
                 course_id=course_key
             )
-        except GeneratedCertificate.DoesNotExist:
-            LOGGER.exception(
+        except GeneratedCertificate.DoesNotExist as exc:
+            error_msg = (
                 "Task award_course_certificate was called without Certificate found "
                 f"for {course_key} to user {username}"
             )
-            return
+            LOGGER.exception(error_msg)
+            raise _retry_with_custom_exception(
+                username=username,
+                course_run_key=course_run_key,
+                reason=error_msg,
+                countdown=countdown
+            ) from exc
+
         if certificate.mode in CourseMode.CERTIFICATE_RELEVANT_MODES:
             try:
                 course_overview = CourseOverview.get_from_id(course_key)
@@ -444,7 +451,7 @@ def award_course_certificate(self, username, course_run_key, certificate_availab
                 username=settings.CREDENTIALS_SERVICE_USERNAME),
                 org=course_key.org,
             )
-
+            
             # Date is being passed via JSON and is encoded in the EMCA date time string format. The rest of the code
             # expects a datetime.
             if certificate_available_date:
